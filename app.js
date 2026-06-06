@@ -3,6 +3,19 @@ const SAVE_KEY = 'stipend_rows_v2';
 let rows = [];
 let nextId = 0;
 
+// Security helpers
+
+function sanitizeText(val, maxLen) {
+  if (typeof val !== 'string') return '';
+  return val.replace(/[<>"'`]/g, '').slice(0, maxLen);
+}
+
+function sanitizeNumber(val) {
+  if (typeof val !== 'string' && typeof val !== 'number') return '';
+  const s = String(val).replace(/[^0-9.\-]/g, '');
+  return isNaN(parseFloat(s)) ? '' : s;
+}
+
 // Grade helpers
 
 function scoreClass(sc) {
@@ -87,7 +100,7 @@ function setScoreError(wrap, hasError) {
 
 function renderRows() {
   const wrap = document.getElementById('rows');
-  wrap.innerHTML = '';
+  wrap.replaceChildren();
 
   rows.forEach((r, i) => {
     const div = document.createElement('div');
@@ -104,6 +117,7 @@ function renderRows() {
     const nameInp = document.createElement('input');
     nameInp.type = 'text';
     nameInp.placeholder = 'Назва предмета';
+    nameInp.maxLength = 100;
     nameInp.value = r.name;
     nameInp.addEventListener('input', () => onInput(r.id, 'name', nameInp.value));
     nameWrap.appendChild(nameInp);
@@ -249,12 +263,22 @@ function save() {
 
 function load() {
   try {
-    const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '[]');
-    if (saved.length) {
-      saved.forEach(addRow);
-      return;
-    }
-  } catch (e) { /* ignore */ }
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) { addRow(); return; }
+    const saved = JSON.parse(raw);
+    if (!Array.isArray(saved)) { addRow(); return; }
+    const clean = saved
+      .slice(0, 50)
+      .filter(r => r && typeof r === 'object')
+      .map(r => ({
+        name:    sanitizeText(r.name, 100),
+        credits: sanitizeNumber(r.credits),
+        score:   sanitizeNumber(r.score),
+      }));
+    if (clean.length) { clean.forEach(addRow); return; }
+  } catch (e) {
+    localStorage.removeItem(SAVE_KEY);
+  }
   addRow();
 }
 
