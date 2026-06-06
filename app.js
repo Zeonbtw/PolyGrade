@@ -235,7 +235,7 @@ function calc() {
   document.getElementById('stat-simple').textContent = simpleAvg.toFixed(2);
 
   const toFive = sc => sc >= 88 ? 5 : sc >= 71 ? 4 : sc >= 50 ? 3 : 2;
-  const fiveAvg = valid.reduce((s, v) => s + toFive(v.sc) * v.cr, 0) / totalCr;
+  const fiveAvg = valid.reduce((s, v) => s + toFive(v.sc), 0) / valid.length;
   const fiveEl = document.getElementById('stat-five');
   fiveEl.textContent = fiveAvg.toFixed(2);
   fiveEl.className = 'stat-val' +
