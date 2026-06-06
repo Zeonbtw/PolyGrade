@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PolyGrade</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="shell">
+ 
+  <div class="header">
+    <h1>PolyGrade</h1>
+    <span class="tag">v1</span>
+  </div>
+ 
+  <!-- Main card -->
+  <div class="card">
+    <div class="col-headers">
+      <span class="col-idx">#</span>
+      <span class="col-name">Предмет</span>
+      <span class="col-credits">Кредити</span>
+      <span class="col-score">Бал</span>
+      <span class="col-del"></span>
+    </div>
+    <div class="rows-wrap" id="rows"></div>
+    <button class="add-row-btn" id="add-btn">
+      <span class="plus">+</span> Додати предмет
+    </button>
+  </div>
+ 
+  <!-- Result panel -->
+  <div class="result-panel">
+    <div class="result-main">
+      <div class="result-label">Стипендійний бал</div>
+      <div class="result-score" id="result-score">—</div>
+      <div class="result-formula" id="result-formula"></div>
+      <button class="copy-btn" id="copy-btn" onclick="copyResult()" disabled>
+        <span class="copy-icon">📋</span>
+        <span class="copy-text">Скопіювати результат</span>
+      </button>
+    </div>
+    <div class="result-side">
+      <div class="grade-pill gp5" id="pill-5">
+        <span class="gmark">5</span><span class="grange">88–100</span>
+      </div>
+      <div class="grade-pill gp4" id="pill-4">
+        <span class="gmark">4</span><span class="grange">71–88</span>
+      </div>
+      <div class="grade-pill gp3" id="pill-3">
+        <span class="gmark">3</span><span class="grange">50–71</span>
+      </div>
+      <div class="grade-pill gp2" id="pill-2">
+        <span class="gmark">2</span><span class="grange">&lt; 50</span>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-label">Предметів</div>
+      <div class="stat-val" id="stat-subjects">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Кредитів</div>
+      <div class="stat-val" id="stat-credits">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Середнє (просте)</div>
+      <div class="stat-val" id="stat-simple">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Середнє (5-бальна)</div>
+      <div class="stat-val" id="stat-five">—</div>
+    </div>
+  </div>
+ 
+  <div class="toolbar">
+    <button class="clear-btn" id="clear-btn">Очистити все</button>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <a class="tg-btn" href="#" onclick="openTelegram(); return false;" rel="noopener noreferrer">
+      <svg class="tg-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.93 7.17-1.784 8.4c-.13.585-.474.727-.96.452l-2.656-1.957-1.28 1.232c-.142.142-.26.26-.533.26l.19-2.69 4.887-4.414c.212-.19-.047-.294-.33-.104L8.29 14.86l-2.6-.813c-.566-.177-.577-.566.118-.838l10.17-3.923c.47-.17.885.114.952.884z" fill="#fff"/>
+      </svg>
+      <span>Знайшов помилку чи маєш ідею? Пиши автору</span>
+      <svg class="tg-arrow" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M3 8h10M9 4l4 4-4 4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+  </footer>
+
+</div>
+ 
+<script src="app.js"></script>
+</body>
+</html>
