@@ -544,3 +544,63 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 .stat-val.c-amber { color: var(--amber); }
 .stat-val.c-red   { color: var(--red);   }
 .col-idx { width: 28px; flex-shrink: 0; text-align: right; padding-right: 4px; }
+
+/* Import PDF button */
+
+.import-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.import-btn:hover:not(:disabled) {
+  background: #1a1230;
+  color: var(--accent);
+  border-color: var(--accent2);
+}
+
+.import-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Toast */
+
+.toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--raised);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 100;
+}
+
+.toast.toast-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast.toast-err {
+  background: var(--red-bg);
+  border-color: #3d0e0e;
+  color: var(--red);
+}
