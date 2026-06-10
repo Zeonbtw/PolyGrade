@@ -78,16 +78,34 @@
   </div>
  
   <div class="toolbar">
-    <button class="import-btn" id="import-btn">
+    <button class="import-btn" id="paste-btn">
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2M8 2v8M5 7l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      Імпорт PDF
+      Імпорт таблиці
     </button>
     <button class="clear-btn" id="clear-btn">Очистити все</button>
   </div>
 
   <input type="file" id="pdf-input" accept=".pdf" style="display:none">
+
+  <!-- Paste modal -->
+  <div class="modal-backdrop" id="modal-backdrop">
+    <div class="modal">
+      <div class="modal-title">Імпорт з таблиці</div>
+      <p class="modal-hint">
+        Відкрийте свій навчальний план на сайті університету,<br>
+        виділіть всю таблицю <kbd>Ctrl+A</kbd> → скопіюйте <kbd>Ctrl+C</kbd>,<br>
+        потім вставте сюди:
+      </p>
+      <textarea id="paste-area" class="paste-area" placeholder="Вставте таблицю тут (Ctrl+V)…" spellcheck="false"></textarea>
+      <div class="modal-hint modal-preview" id="modal-preview"></div>
+      <div class="modal-actions">
+        <button class="modal-cancel" id="modal-cancel">Скасувати</button>
+        <button class="modal-confirm" id="modal-confirm" disabled>Імпортувати</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Toast -->
   <div class="toast" id="toast"></div>

@@ -282,7 +282,7 @@ function load() {
   addRow();
 }
 
-// ── PDF Import ────────────────────────────────────────────────
+// ── Table paste import ────────────────────────────────────────
 
 function showToast(msg, type = 'ok') {
   const el = document.getElementById('toast');
@@ -292,124 +292,87 @@ function showToast(msg, type = 'ok') {
   el._timer = setTimeout(() => { el.className = 'toast'; }, 3200);
 }
 
-async function parsePDF(file) {
-  const PDFJS = window['pdfjs-dist/build/pdf'];
-  PDFJS.GlobalWorkerOptions.workerSrc =
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+function parsePastedTable(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
 
-  const buf = await file.arrayBuffer();
-  const pdf = await PDFJS.getDocument({ data: buf }).promise;
+  // Find the header row (contains "Дисципліна" and "ЄКТС")
+  const headerIdx = lines.findIndex(l => l.includes('Дисципліна') && l.includes('ЄКТС'));
+  if (headerIdx === -1) return null;
 
-  // Collect every text item with its position
-  const allItems = [];
-  for (let p = 1; p <= pdf.numPages; p++) {
-    const page    = await pdf.getPage(p);
-    const content = await page.getTextContent();
-    for (const item of content.items) {
-      const s = item.str.replace(/\s+/g, ' ').trim();
-      if (s) allItems.push({ str: s, x: item.transform[4], y: item.transform[5] });
-    }
-  }
+  const header = lines[headerIdx].split('\t').map(s => s.trim());
+  const nameCol  = header.findIndex(h => h.includes('Дисципліна'));
+  const credCol  = header.findIndex(h => h.includes('ЄКТС'));
+  const scoreCol = header.findIndex(h => h.includes('Оц'));
 
-  // Sort top-to-bottom, then left-to-right
-  allItems.sort((a, b) => b.y - a.y || a.x - b.x);
+  if (nameCol === -1 || credCol === -1 || scoreCol === -1) return null;
 
-  // Group into visual lines (items within 4pt vertically)
-  const lines = [];
-  for (const item of allItems) {
-    const last = lines[lines.length - 1];
-    if (last && Math.abs(item.y - last.baseY) < 4) {
-      last.items.push(item);
-    } else {
-      lines.push({ baseY: item.y, items: [item] });
-    }
-  }
-
-  // Find the header line that contains both "ЄКТС" (credits) and "100" (grade)
-  let creditsX = null, scoreX = null, headerEndIdx = -1;
-
-  for (let i = 0; i < lines.length; i++) {
-    const strs = lines[i].items.map(it => it.str);
-    if (strs.some(s => s.includes('ЄКТС'))) {
-      creditsX = lines[i].items.find(it => it.str.includes('ЄКТС')).x;
-    }
-    if (strs.includes('100') && creditsX !== null) {
-      scoreX = lines[i].items.find(it => it.str === '100').x;
-      headerEndIdx = i;
-      break;
-    }
-  }
-
-  if (creditsX === null || scoreX === null) return null;
-
-  const TOL = 12; // pt tolerance for column matching
   const subjects = [];
-
-  for (let i = headerEndIdx + 1; i < lines.length; i++) {
-    const { items } = lines[i];
-    const credItem  = items.find(it => Math.abs(it.x - creditsX) < TOL);
-    const scoreItem = items.find(it => Math.abs(it.x - scoreX)   < TOL);
-
-    if (credItem && scoreItem) {
-      const credits = parseFloat(credItem.str);
-      const score   = parseFloat(scoreItem.str);
-      // Left-side items are the subject name (before the credits column)
-      const name = items
-        .filter(it => it.x < creditsX - 20)
-        .map(it => it.str)
-        .join(' ')
-        .trim();
-
-      if (!isNaN(credits) && !isNaN(score) && name) {
-        subjects.push({ name, credits: String(credits), score: String(score) });
-      }
-    } else {
-      // Continuation of previous subject name (multi-line cell)
-      const leftParts = items
-        .filter(it => it.x < creditsX - 20)
-        .map(it => it.str);
-      if (leftParts.length && subjects.length > 0) {
-        subjects[subjects.length - 1].name =
-          (subjects[subjects.length - 1].name + ' ' + leftParts.join(' ')).trim();
-      }
+  for (let i = headerIdx + 1; i < lines.length; i++) {
+    const cols    = lines[i].split('\t').map(s => s.trim());
+    const name    = cols[nameCol];
+    const credits = parseFloat(cols[credCol]);
+    const score   = parseFloat(cols[scoreCol]);
+    if (name && !isNaN(credits) && !isNaN(score)) {
+      subjects.push({ name, credits: String(credits), score: String(score) });
     }
   }
-
   return subjects.length ? subjects : null;
 }
 
-document.getElementById('import-btn').addEventListener('click', () => {
-  document.getElementById('pdf-input').click();
+function applyImport(subjects) {
+  rows = [];
+  nextId = 0;
+  subjects.forEach(addRow);
+  save();
+  const n = subjects.length;
+  showToast(`Імпортовано ${n} предмет${n === 1 ? '' : n < 5 ? 'и' : 'ів'} ✓`);
+}
+
+// ── Paste modal ───────────────────────────────────────────────
+
+const pasteArea    = document.getElementById('paste-area');
+const modalBackdrop = document.getElementById('modal-backdrop');
+const modalPreview = document.getElementById('modal-preview');
+const modalConfirm = document.getElementById('modal-confirm');
+
+function openModal() {
+  pasteArea.value = '';
+  modalPreview.textContent = '';
+  modalConfirm.disabled = true;
+  modalBackdrop.classList.add('modal-open');
+  setTimeout(() => pasteArea.focus(), 80);
+}
+
+function closeModal() {
+  modalBackdrop.classList.remove('modal-open');
+}
+
+document.getElementById('paste-btn').addEventListener('click', openModal);
+document.getElementById('modal-cancel').addEventListener('click', closeModal);
+modalBackdrop.addEventListener('click', e => { if (e.target === modalBackdrop) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+pasteArea.addEventListener('input', () => {
+  const subjects = parsePastedTable(pasteArea.value);
+  if (subjects) {
+    modalPreview.textContent = `Знайдено ${subjects.length} предмет${subjects.length === 1 ? '' : subjects.length < 5 ? 'и' : 'ів'}`;
+    modalPreview.style.color = 'var(--green)';
+    modalConfirm.disabled = false;
+  } else if (pasteArea.value.trim()) {
+    modalPreview.textContent = 'Таблиця не розпізнана — переконайтесь, що скопіювали весь вміст';
+    modalPreview.style.color = 'var(--red)';
+    modalConfirm.disabled = true;
+  } else {
+    modalPreview.textContent = '';
+    modalConfirm.disabled = true;
+  }
 });
 
-document.getElementById('pdf-input').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  e.target.value = '';
-  if (!file) return;
-
-  const btn = document.getElementById('import-btn');
-  btn.disabled = true;
-  btn.textContent = 'Зчитую…';
-
-  try {
-    const subjects = await parsePDF(file);
-    if (!subjects) {
-      showToast('Не вдалося розпізнати таблицю оцінок у цьому PDF', 'err');
-      return;
-    }
-    // Clear existing rows, load imported ones
-    rows = [];
-    nextId = 0;
-    subjects.forEach(addRow);
-    save();
-    showToast(`Імпортовано ${subjects.length} предмет${subjects.length === 1 ? '' : subjects.length < 5 ? 'и' : 'ів'} ✓`);
-  } catch (err) {
-    console.error(err);
-    showToast('Помилка читання PDF', 'err');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2M8 2v8M5 7l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Імпорт PDF`;
-  }
+modalConfirm.addEventListener('click', () => {
+  const subjects = parsePastedTable(pasteArea.value);
+  if (!subjects) return;
+  closeModal();
+  applyImport(subjects);
 });
 
 // ── Event listeners ───────────────────────────────────────────
