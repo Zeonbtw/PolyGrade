@@ -2,7 +2,7 @@
 
 > Scholarship score calculator for Lviv Polytechnic National University students.
 
-[images/screenshot.png]
+![images/screenshot.png](images/screenshot.png)
 
 
 **[🚀 Live Demo](https://zeonbtw.github.io/PolyGrade/)**
